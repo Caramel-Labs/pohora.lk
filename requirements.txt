@@ -46,6 +46,8 @@ httpx==0.28.1
 httpx-sse==0.4.0
 huggingface-hub==0.30.1
 idna==3.10
+imbalanced-learn==0.13.0
+imblearn==0.0
 ipykernel==6.29.5
 ipython==9.0.2
 ipython_pygments_lexers==1.1.1
@@ -139,6 +141,7 @@ Send2Trash==1.8.3
 setuptools==78.1.0
 shellingham==1.5.4
 six==1.17.0
+sklearn-compat==0.1.3
 sniffio==1.3.1
 soupsieve==2.6
 SQLAlchemy==2.0.40
