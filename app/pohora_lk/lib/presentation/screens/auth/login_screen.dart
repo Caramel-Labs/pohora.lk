@@ -51,7 +51,9 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state.status == AuthStatus.authenticated) {
-          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil(AppRoutes.initial, (route) => false);
         } else if (state.status == AuthStatus.unauthenticated &&
             state.errorMessage != null) {
           setState(() {
@@ -128,6 +130,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   child:
                       _isLoading
@@ -139,7 +144,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: Colors.white,
                             ),
                           )
-                          : const Text('Sign In'),
+                          : const Text(
+                            'Sign In',
+                            style: TextStyle(fontSize: 16),
+                          ),
                 ),
                 const SizedBox(height: 16),
                 const Row(
@@ -153,17 +161,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                OutlinedButton.icon(
+                FilledButton.tonalIcon(
                   onPressed: _isLoading ? null : _signInWithGoogle,
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   icon: Image.asset(
                     'assets/icons/google-icon.png',
                     height: 24,
                     errorBuilder: (context, _, __) => const Icon(Icons.public),
                   ),
-                  label: const Text('Sign in with Google'),
+                  label: Text(
+                    'Sign in with Google',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Row(

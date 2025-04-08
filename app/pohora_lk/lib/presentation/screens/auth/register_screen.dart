@@ -46,7 +46,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state.status == AuthStatus.authenticated) {
-          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil(AppRoutes.initial, (route) => false);
         } else if (state.status == AuthStatus.unauthenticated &&
             state.errorMessage != null) {
           setState(() {
@@ -140,6 +142,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   child:
                       _isLoading
@@ -151,7 +156,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               color: Colors.white,
                             ),
                           )
-                          : const Text('Register'),
+                          : const Text(
+                            'Register',
+                            style: TextStyle(fontSize: 16),
+                          ),
                 ),
                 const SizedBox(height: 24),
                 Row(

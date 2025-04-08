@@ -3,18 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pohora_lk/blocs/auth/auth_bloc.dart';
 import 'package:pohora_lk/data/repositories/auth_repository.dart';
+import 'package:pohora_lk/data/repositories/chat_repository.dart';
 import 'package:pohora_lk/routes.dart';
-import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
   final authRepository = AuthRepository();
+  final chatRepository = ChatRepository();
 
   runApp(
-    RepositoryProvider.value(
-      value: authRepository,
+    MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider.value(value: authRepository),
+        RepositoryProvider.value(value: chatRepository),
+      ],
       child: BlocProvider(
         create: (context) => AuthBloc(authRepository: authRepository),
         child: const MyApp(),
@@ -38,7 +42,6 @@ class MyApp extends StatelessWidget {
       ),
       routes: AppRoutes.routes,
       initialRoute: AppRoutes.initial,
-      onGenerateRoute: AppRoutes.onGenerateRoute,
       debugShowCheckedModeBanner: false,
     );
   }

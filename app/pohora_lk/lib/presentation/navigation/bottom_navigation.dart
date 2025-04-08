@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pohora_lk/presentation/screens/chatbot/chatbot_screen.dart';
 import 'package:pohora_lk/presentation/screens/home/home_screen.dart';
-import 'package:pohora_lk/presentation/screens/explore/explore_screen.dart';
 import 'package:pohora_lk/presentation/screens/news/news_screen.dart';
 import 'package:pohora_lk/presentation/screens/profile/profile_screen.dart';
 
@@ -16,7 +16,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
 
   final List<Widget> _screens = [
     HomeScreen(),
-    const ExploreScreen(),
+    const ChatbotScreen(),
     const NewsScreen(),
     const ProfileScreen(),
   ];
@@ -41,9 +41,17 @@ class _BottomNavigationState extends State<BottomNavigation> {
             selectedIcon: Icon(Icons.home),
           ),
           NavigationDestination(
-            icon: Icon(Icons.explore_outlined),
-            selectedIcon: Icon(Icons.explore),
-            label: 'Explore',
+            icon: Image.asset(
+              'assets/icons/ai_chat_outlined.png',
+              width: 24,
+              height: 24,
+            ),
+            selectedIcon: Image.asset(
+              'assets/icons/ai_chat_filled.png',
+              width: 24,
+              height: 24,
+            ),
+            label: 'Assistant',
           ),
           NavigationDestination(
             icon: Icon(Icons.article_outlined),
