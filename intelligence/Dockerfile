@@ -4,9 +4,6 @@ FROM python:3.11-slim
 # Set the working directory inside the container
 WORKDIR /app
 
-# Install ffmpeg and other necessary packages
-# RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y
-
 # Copy the requirements.txt file into the container
 COPY requirements.txt .
 
@@ -20,4 +17,4 @@ COPY . .
 EXPOSE 8000
 
 # Command to run the FastAPI app using 'fastapi run'
-CMD ["fastapi", "run"]
+CMD ["fastapi", "run", "main.py"]
