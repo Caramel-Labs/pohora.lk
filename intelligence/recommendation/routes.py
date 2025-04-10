@@ -33,10 +33,8 @@ def ping_recommendation_router():
 
 @router.post("/crop", tags=["Live"])
 def get_crop_recommendation(features: CropFeatures):
-    # Set start time (for measuring execution time)
     start_time = time.time()
 
-    # Load pickled model and encoder
     try:
         model = joblib.load(CROP_MODEL)
         label_encoder = joblib.load(CROP_ENCODER_MODEL)
@@ -44,7 +42,6 @@ def get_crop_recommendation(features: CropFeatures):
         raise RuntimeError(f"Failed to load model files: {str(e)}")
 
     try:
-        # Convert input to 2D array (required for sklearn)
         input_data = np.array(
             [
                 [
@@ -59,15 +56,39 @@ def get_crop_recommendation(features: CropFeatures):
             ]
         )
 
-        # Predict
-        encoded_pred = model.predict(input_data)
-        crop_name = label_encoder.inverse_transform(encoded_pred)[0]
+        # Get both prediction and probabilities
+        if hasattr(model, "predict_proba"):
+            probabilities = model.predict_proba(input_data)[0]
+            encoded_pred = model.predict(input_data)
+            crop_name = label_encoder.inverse_transform(encoded_pred)[0]
 
-        # Measure execution time
+            # Get top 3 confident predictions
+            top_n = 3
+            top_indices = probabilities.argsort()[-top_n:][::-1]
+            top_crops = label_encoder.inverse_transform(top_indices)
+            top_confidences = probabilities[top_indices].tolist()
+
+            confidences = {
+                "top_choices": [
+                    {"crop": crop, "confidence": float(conf)}
+                    for crop, conf in zip(top_crops, top_confidences)
+                ],
+                "predicted_confidence": float(probabilities[encoded_pred][0]),
+            }
+        else:
+            # Fallback for models without predict_proba
+            encoded_pred = model.predict(input_data)
+            crop_name = label_encoder.inverse_transform(encoded_pred)[0]
+            confidences = {"warning": "Model doesn't support confidence scores"}
+
         execution_time = time.time() - start_time
         print(f"Execution time: {execution_time} seconds")
 
-        return {"crop": crop_name}
+        return {
+            "crop": crop_name,
+            "confidence": confidences,
+            "execution_time": execution_time,
+        }
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Prediction failed: {str(e)}")
@@ -83,7 +104,7 @@ def get_fertilizer_recommendation(features: FertilizerFeatures):
         model = joblib.load(FERTILIZER_MODEL)
         label_encoder = joblib.load(FERTILIZER_ENCODER_MODEL)
     except Exception as e:
-        raise RuntimeError(f"Failed to load model files: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Model loading failed: {str(e)}")
 
     try:
         # Create base numerical features array
@@ -98,9 +119,7 @@ def get_fertilizer_recommendation(features: FertilizerFeatures):
                 features.potassium,
                 features.carbon,
             ]
-        ).reshape(
-            1, -1
-        )  # Reshape to 2D array
+        ).reshape(1, -1)
 
         # One-hot encode soil type
         soil_categories = [
@@ -114,6 +133,8 @@ def get_fertilizer_recommendation(features: FertilizerFeatures):
         if features.soil in soil_categories:
             soil_index = soil_categories.index(features.soil)
             soil_encoded[soil_index] = 1
+        else:
+            raise ValueError(f"Invalid soil type: {features.soil}")
 
         # One-hot encode crop type
         crop_categories = [
@@ -144,6 +165,8 @@ def get_fertilizer_recommendation(features: FertilizerFeatures):
         if features.crop in crop_categories:
             crop_index = crop_categories.index(features.crop)
             crop_encoded[crop_index] = 1
+        else:
+            raise ValueError(f"Invalid crop type: {features.crop}")
 
         # Combine all features
         input_data = np.hstack(
@@ -154,18 +177,49 @@ def get_fertilizer_recommendation(features: FertilizerFeatures):
             ]
         )
 
-        # Predict
-        encoded_pred = model.predict(input_data)
-        fertilizer_name = label_encoder.inverse_transform(encoded_pred)[0]
+        # Prediction with confidence scores
+        if hasattr(model, "predict_proba"):
+            probabilities = model.predict_proba(input_data)[0]
+            encoded_pred = model.predict(input_data)
+            fertilizer_name = label_encoder.inverse_transform(encoded_pred)[0]
 
-        # Measure execution time
+            # Get top recommendations
+            top_n = 3
+            top_indices = probabilities.argsort()[-top_n:][::-1]
+            top_fertilizers = label_encoder.inverse_transform(top_indices)
+            top_confidences = probabilities[top_indices].tolist()
+
+            confidence_data = {
+                "top_choices": [
+                    {"fertilizer": fert, "confidence": float(conf)}
+                    for fert, conf in zip(top_fertilizers, top_confidences)
+                ],
+                "predicted_confidence": float(probabilities[encoded_pred][0]),
+            }
+        else:
+            encoded_pred = model.predict(input_data)
+            fertilizer_name = label_encoder.inverse_transform(encoded_pred)[0]
+            confidence_data = {
+                "warning": "This model doesn't support confidence scores"
+            }
+
         execution_time = time.time() - start_time
-        print(f"Execution time: {execution_time} seconds")
 
-        return {"fertilizer": fertilizer_name}
+        return {
+            "fertilizer": fertilizer_name,
+            "confidence": confidence_data,
+            "execution_time": execution_time,
+            # "input_features": {  # For debugging/transparency
+            #     "numerical": numerical_features.tolist()[0],
+            #     "soil_type": features.soil,
+            #     "crop_type": features.crop,
+            # },
+        }
 
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid input: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
 
 # Make module safely exportable
