@@ -94,10 +94,7 @@ class _NewsScreenState extends State<NewsScreen> {
 
   Widget _buildNewsCard(News news) {
     // For the image URL, we'll use a placeholder if the API is down
-    final imageUrl =
-        news.imagePath.startsWith('http')
-            ? news.imagePath
-            : 'https://placehold.co/600x400?text=News+Image';
+    final imageUrl = 'https://placehold.co/600x400/png?text=${news.title}';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),

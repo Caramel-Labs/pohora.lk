@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:pohora_lk/data/models/crop_data.dart';
+import 'package:pohora_lk/data/models/cultivation.dart';
 import 'package:pohora_lk/data/models/fertilizer_data.dart';
 import 'package:pohora_lk/data/models/fertilizer_log.dart';
+import 'package:pohora_lk/data/repositories/cultivation_repository.dart';
 import 'package:pohora_lk/data/services/fertilizer_service.dart';
 import 'package:intl/intl.dart';
 
@@ -22,11 +24,14 @@ class CropDetailsScreen extends StatefulWidget {
 class _CropDetailsScreenState extends State<CropDetailsScreen> {
   List<FertilizerLog> _fertilizerLogs = [];
   bool _isLoadingLogs = true;
+  Cultivation? _cultivationData;
+  bool _isLoadingCultivation = true;
 
   @override
   void initState() {
     super.initState();
     _loadFertilizerLogs();
+    _loadCultivationData();
   }
 
   Future<void> _loadFertilizerLogs() async {
@@ -51,6 +56,47 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load fertilizer logs: $e')),
       );
+      setState(() {
+        _isLoadingLogs = false;
+        // Set empty list on error
+        _fertilizerLogs = [];
+      });
+    }
+  }
+
+  // Add a method to load cultivation data
+  Future<void> _loadCultivationData() async {
+    setState(() {
+      _isLoadingCultivation = true;
+    });
+
+    try {
+      final repository = CultivationRepository();
+      final cultivations = await repository.getCultivations();
+
+      // Find the cultivation that matches our cultivationId
+      final cultivation = cultivations.firstWhere(
+        (c) => c.cultivationId == widget.cultivationId,
+        orElse:
+            () => Cultivation(
+              cultivationId: widget.cultivationId,
+              soilType: 'Unknown', // Default soil type
+              landArea: 0,
+              location: 'Unknown',
+              cropId: widget.cropId,
+              userId: '',
+            ),
+      );
+
+      setState(() {
+        _cultivationData = cultivation;
+        _isLoadingCultivation = false;
+      });
+    } catch (e) {
+      print('Error loading cultivation data: $e');
+      setState(() {
+        _isLoadingCultivation = false;
+      });
     }
   }
 
@@ -122,28 +168,132 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Crop Information',
-                          style: TextStyle(
+                        Text(
+                          cropData?.name ?? 'Unknown Crop',
+                          style: const TextStyle(
                             fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          cropData?.description ?? 'No description available',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+
+                        const Divider(height: 24),
+
+                        // Cultivation details section
+                        const Text(
+                          'Cultivation Details',
+                          style: TextStyle(
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 12),
 
-                        // Crop description
-                        Text(
-                          cropData?.description ?? 'No description available',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey.shade800,
-                            height: 1.5,
-                          ),
-                        ),
+                        // Show loading indicator while fetching cultivation data
+                        _isLoadingCultivation
+                            ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 12.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                            : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Location row
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.location_on,
+                                      size: 18,
+                                      color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Location: ',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        _cultivationData?.location ?? 'Unknown',
+                                        style: TextStyle(
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
 
-                        const SizedBox(height: 24),
+                                // Soil Type row
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.landscape,
+                                      size: 18,
+                                      color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Soil Type: ',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        _cultivationData?.soilType ?? 'Unknown',
+                                        style: TextStyle(
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
 
-                        // Get fertilizer recommendation button
+                                // Land Area row
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.area_chart,
+                                      size: 18,
+                                      color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Land Area: ',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        '${_cultivationData?.landArea ?? 0} ${_cultivationData?.unit ?? 'acres'}',
+                                        style: TextStyle(
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                        const SizedBox(height: 20),
+
+                        // Add the Get Fertilizer Recommendation button
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
@@ -151,6 +301,7 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                               backgroundColor:
                                   Theme.of(context).colorScheme.primary,
                               foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -158,8 +309,11 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                             onPressed: () {
                               _showFertilizerRecommendationSheet(context);
                             },
-                            label: Text('Get Fertilizer Recommendations'),
-                            icon: Icon(Icons.auto_awesome, color: Colors.white),
+                            icon: const Icon(
+                              Icons.auto_awesome,
+                              color: Colors.white,
+                            ),
+                            label: const Text('Get Fertilizer Recommendation'),
                           ),
                         ),
                       ],
@@ -285,28 +439,30 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
           'Applied on ${dateFormat.format(log.timestamp)}',
           style: TextStyle(color: Colors.grey.shade600),
         ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () {
-          // Show detailed view of this application log if needed
-        },
       ),
     );
   }
 
+  // Update the _showFertilizerRecommendationSheet method
   void _showFertilizerRecommendationSheet(BuildContext context) {
     // Controllers for form fields with default values
     final temperatureController = TextEditingController(text: '25');
     final moistureController = TextEditingController(text: '60');
-    final precipitationController = TextEditingController(text: '30');
+    final rainfallController = TextEditingController(text: '30');
     final phController = TextEditingController(text: '6.5');
     final nitrogenController = TextEditingController(text: '40');
     final phosphorusController = TextEditingController(text: '30');
     final potassiumController = TextEditingController(text: '35');
-    final organicCarbonController = TextEditingController(text: '0.5');
+    final carbonController = TextEditingController(text: '0.5');
+    final soilType = _cultivationData?.soilType ?? 'Loamy Soil';
 
     // Unit selection state
     String temperatureUnit = '°C';
-    String precipitationUnit = 'mm';
+    String rainfallUnit = 'mm';
+
+    // Get crop name from widget cropId
+    final cropData = CropData.getById(widget.cropId);
+    final cropName = cropData?.name ?? 'Unknown';
 
     showModalBottomSheet(
       context: context,
@@ -420,39 +576,39 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                                 helperText: 'Current soil moisture content',
                               ),
 
-                              // Precipitation
+                              // Rainfall
                               _buildInputFieldWithUnitSelector(
-                                controller: precipitationController,
-                                label: 'Precipitation',
-                                currentUnit: precipitationUnit,
+                                controller: rainfallController,
+                                label: 'Rainfall',
+                                currentUnit: rainfallUnit,
                                 units: const ['mm', 'inches'],
                                 onUnitChanged: (newUnit) {
                                   setState(() {
                                     // Convert value when unit changes
                                     if (newUnit == 'inches' &&
-                                        precipitationUnit == 'mm') {
+                                        rainfallUnit == 'mm') {
                                       // mm to inches: mm / 25.4
                                       final mmValue =
                                           double.tryParse(
-                                            precipitationController.text,
+                                            rainfallController.text,
                                           ) ??
                                           0;
                                       final inchesValue = mmValue / 25.4;
-                                      precipitationController.text = inchesValue
+                                      rainfallController.text = inchesValue
                                           .toStringAsFixed(2);
                                     } else if (newUnit == 'mm' &&
-                                        precipitationUnit == 'inches') {
+                                        rainfallUnit == 'inches') {
                                       // inches to mm: inches * 25.4
                                       final inchesValue =
                                           double.tryParse(
-                                            precipitationController.text,
+                                            rainfallController.text,
                                           ) ??
                                           0;
                                       final mmValue = inchesValue * 25.4;
-                                      precipitationController.text = mmValue
+                                      rainfallController.text = mmValue
                                           .toStringAsFixed(0);
                                     }
-                                    precipitationUnit = newUnit;
+                                    rainfallUnit = newUnit;
                                   });
                                 },
                                 keyboardType: TextInputType.number,
@@ -503,17 +659,17 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                                 helperText: 'Current potassium level in soil',
                               ),
 
-                              // Organic carbon
+                              // Carbon content (renamed from Organic Carbon)
                               _buildInputField(
-                                controller: organicCarbonController,
-                                label: 'Organic Carbon',
+                                controller: carbonController,
+                                label: 'Carbon content',
                                 suffix: '%',
                                 keyboardType:
                                     const TextInputType.numberWithOptions(
                                       decimal: true,
                                     ),
                                 hint: '0.2-1.5',
-                                helperText: 'Soil organic carbon content',
+                                helperText: 'Soil carbon content',
                               ),
 
                               // Soil type display (non-editable)
@@ -544,7 +700,7 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                                       ),
                                       width: double.infinity,
                                       child: Text(
-                                        'Loamy', // This would come from the cultivation data
+                                        'Loamy Soil', // This would come from the cultivation data
                                         style: TextStyle(
                                           color: Colors.grey.shade800,
                                         ),
@@ -564,6 +720,57 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                                           ),
                                         ),
                                       ),
+                                  ],
+                                ),
+                              ),
+
+                              // Crop type display (non-editable)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Crop Type',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: Colors.grey.shade300,
+                                        ),
+                                        color: Colors.grey.shade100,
+                                      ),
+                                      width: double.infinity,
+                                      child: Text(
+                                        cropName,
+                                        style: TextStyle(
+                                          color: Colors.grey.shade800,
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        top: 5,
+                                        left: 12,
+                                      ),
+                                      child: Text(
+                                        'Current crop in your cultivation',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -617,7 +824,7 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          onPressed: () {
+                          onPressed: () async {
                             // Close the bottom sheet
                             Navigator.pop(context);
 
@@ -625,8 +832,8 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                             double temperatureValue =
                                 double.tryParse(temperatureController.text) ??
                                 25.0;
-                            double precipitationValue =
-                                double.tryParse(precipitationController.text) ??
+                            double rainfallValue =
+                                double.tryParse(rainfallController.text) ??
                                 30.0;
 
                             // Convert values to required units if needed
@@ -636,36 +843,37 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                                   (temperatureValue - 32) * 5 / 9;
                             }
 
-                            if (precipitationUnit == 'inches') {
+                            if (rainfallUnit == 'inches') {
                               // Convert inches to mm
-                              precipitationValue = precipitationValue * 25.4;
+                              rainfallValue = rainfallValue * 25.4;
                             }
 
+                            // Create updated parameters using the new format
                             final params = FertilizerRecommendationParams(
                               cropId: widget.cropId,
                               temperature: temperatureValue,
-                              soilMoisture: double.parse(
-                                moistureController.text,
-                              ),
-                              precipitation: precipitationValue,
+                              moisture: double.parse(moistureController.text),
+                              rainfall: rainfallValue,
                               ph: double.parse(phController.text),
                               nitrogen: double.parse(nitrogenController.text),
-                              phosphorus: double.parse(
+                              phosphorous: double.parse(
                                 phosphorusController.text,
-                              ),
+                              ), // Note the 'o' spelling
                               potassium: double.parse(potassiumController.text),
-                              organicCarbon: double.parse(
-                                organicCarbonController.text,
-                              ),
-                              soilType:
-                                  'Loamy', // This would come from the cultivation data
+                              carbon: double.parse(
+                                carbonController.text,
+                              ), // Renamed from organicCarbon
+                              soil:
+                                  soilType, // This would come from the cultivation data
                             );
 
-                            // Show loading indicator
+                            // Show loading indicator using a separate builder context
+                            BuildContext? dialogContext;
                             showDialog(
                               context: context,
                               barrierDismissible: false,
-                              builder: (BuildContext context) {
+                              builder: (BuildContext ctx) {
+                                dialogContext = ctx;
                                 return const Dialog(
                                   child: Padding(
                                     padding: EdgeInsets.all(20.0),
@@ -687,24 +895,37 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
 
                             // Call the recommendation service
                             final service = FertilizerService();
-                            service
-                                .getFertilizerRecommendation(params)
-                                .then((result) {
-                                  // Close loading dialog
-                                  Navigator.pop(context);
+                            try {
+                              final result = await service
+                                  .getFertilizerRecommendation(params);
 
-                                  // Show result
-                                  _showFertilizerResultScreen(context, result);
-                                })
-                                .catchError((error) {
-                                  // Close loading dialog
-                                  Navigator.pop(context);
+                              // Dismiss loading dialog
+                              if (dialogContext != null &&
+                                  Navigator.canPop(dialogContext!)) {
+                                Navigator.pop(dialogContext!);
+                              }
 
-                                  // Show error
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Error: $error')),
-                                  );
-                                });
+                              // Show result
+                              if (dialogContext!.mounted) {
+                                _showFertilizerResultScreen(
+                                  dialogContext!,
+                                  result,
+                                );
+                              }
+                            } catch (error) {
+                              // Dismiss loading dialog
+                              if (dialogContext != null &&
+                                  Navigator.canPop(dialogContext!)) {
+                                Navigator.pop(dialogContext!);
+                              }
+
+                              // Show error
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $error')),
+                                );
+                              }
+                            }
                           },
                           label: const Text('Get Recommendation'),
                           icon: const Icon(
@@ -722,11 +943,14 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
     );
   }
 
+  // Updated _showFertilizerResultScreen method
   void _showFertilizerResultScreen(
     BuildContext context,
     FertilizerRecommendationResult result,
   ) {
-    final fertilizer = FertilizerData.getById(result.fertilizerId);
+    // Get fertilizer ID using the topFertilizer name
+    final fertilizerId = result.getFertilizerId();
+    final fertilizer = FertilizerData.getById(fertilizerId);
 
     if (fertilizer == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -734,6 +958,10 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
       );
       return;
     }
+
+    // Format confidence percentage
+    final confidencePercentage = (result.predictedConfidence * 100)
+        .toStringAsFixed(0);
 
     showModalBottomSheet(
       context: context,
@@ -785,11 +1013,12 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                           errorBuilder:
                               (context, error, stackTrace) => Container(
                                 height: 200,
+                                width: double.infinity,
                                 color: Colors.grey.shade200,
-                                child: Icon(
+                                child: const Icon(
                                   Icons.science,
                                   size: 64,
-                                  color: Colors.grey.shade400,
+                                  color: Colors.grey,
                                 ),
                               ),
                         ),
@@ -820,7 +1049,7 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              '${(result.matchPercentage * 100).toStringAsFixed(1)}% match',
+                              '$confidencePercentage% Match',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -844,6 +1073,43 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
 
                       const SizedBox(height: 24),
 
+                      // Other recommendations
+                      if (result.topChoices.length > 1) ...[
+                        const Divider(),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Alternative Fertilizers',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Skip the top choice as we already displayed it
+                        for (int i = 1; i < result.topChoices.length; i++) ...[
+                          if (result.topChoices[i].confidence > 0)
+                            ListTile(
+                              title: Text(
+                                result.topChoices[i].name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              trailing: Text(
+                                '${(result.topChoices[i].confidence * 100).toStringAsFixed(0)}%',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              dense: true,
+                            ),
+                        ],
+                      ],
+
+                      const SizedBox(height: 24),
+
                       // Action buttons
                       Row(
                         children: [
@@ -856,23 +1122,13 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
                               ),
-                              child: const Text('Cancel'),
+                              child: const Text('Close'),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                _addFertilizerLog(
-                                  fertilizer.id,
-                                  fertilizer.name,
-                                );
-                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor:
                                     Theme.of(context).colorScheme.primary,
@@ -880,10 +1136,15 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
                               ),
+                              onPressed: () {
+                                // Record the fertilizer application
+                                Navigator.pop(context);
+                                _addFertilizerLog(
+                                  fertilizerId,
+                                  fertilizer.name,
+                                );
+                              },
                               child: const Text('Apply Now'),
                             ),
                           ),
@@ -906,23 +1167,22 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
   ) async {
     final service = FertilizerService();
 
-    try {
-      await service.addFertilizerLog(
-        widget.cultivationId,
-        fertilizerId,
-        fertilizerName,
-      );
+    bool isFertilizerAdded = await service.addFertilizerLog(
+      widget.cultivationId,
+      fertilizerId,
+      fertilizerName,
+    );
 
-      await _loadFertilizerLogs(); // Reload the logs
-
+    if (isFertilizerAdded) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Fertilizer application recorded')),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to record application: $e')),
-      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to record application')));
     }
+    await _loadFertilizerLogs(); // Reload the logs
   }
 
   void _showAddFertilizerLogSheet(BuildContext context) {

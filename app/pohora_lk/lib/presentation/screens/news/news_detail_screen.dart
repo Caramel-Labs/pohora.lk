@@ -251,11 +251,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
 
   Widget _buildCoverImage() {
     // For the image URL, we'll use a placeholder if the API is down
-    final imageUrl =
-        _news!.imagePath.startsWith('http')
-            ? _news!.imagePath
-            : 'https://placehold.co/600x400?text=News+Image';
-
+    final imageUrl = 'https://placehold.co/600x400/png?text=${_news!.title}';
     return SizedBox(
       height: 200,
       width: double.infinity,

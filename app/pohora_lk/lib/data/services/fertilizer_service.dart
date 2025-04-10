@@ -1,73 +1,130 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:pohora_lk/data/models/fertilizer_log.dart';
+import 'package:pohora_lk/data/models/crop_data.dart';
 
 class FertilizerRecommendationParams {
-  final int cropId;
+  final int cropId; // Crop ID from your local CropData
+  final String cropName; // Added for API compatibility
   final double temperature; // degrees Celsius
-  final double soilMoisture; // %
-  final double precipitation; // mm
+  final double moisture; // % (renamed from soilMoisture to match API)
+  final double rainfall; // mm (renamed from precipitation to match API)
   final double ph; // pH scale 0-14
   final double nitrogen; // mg/kg
-  final double phosphorus; // mg/kg
+  final double phosphorous; // mg/kg (renamed to match API spelling)
   final double potassium; // mg/kg
-  final double organicCarbon; // %
-  final String soilType;
+  final double carbon; // % (renamed from organicCarbon to match API)
+  final String soil; // soil type (renamed from soilType to match API)
 
   FertilizerRecommendationParams({
     required this.cropId,
     required this.temperature,
-    required this.soilMoisture,
-    required this.precipitation,
+    required this.moisture,
+    required this.rainfall,
     required this.ph,
     required this.nitrogen,
-    required this.phosphorus,
+    required this.phosphorous,
     required this.potassium,
-    required this.organicCarbon,
-    required this.soilType,
-  });
+    required this.carbon,
+    required this.soil,
+  }) : cropName = CropData.getById(cropId)?.name ?? "Unknown";
 
   Map<String, dynamic> toJson() {
     return {
-      'crop_id': cropId,
       'temperature': temperature,
-      'soil_moisture': soilMoisture,
-      'precipitation': precipitation,
+      'moisture': moisture,
+      'rainfall': rainfall,
       'ph': ph,
       'nitrogen': nitrogen,
-      'phosphorus': phosphorus,
+      'phosphorous': phosphorous,
       'potassium': potassium,
-      'organic_carbon': organicCarbon,
-      'soil_type': soilType,
+      'carbon': carbon,
+      'soil': soil,
+      'crop': cropName,
     };
   }
 }
 
+class FertilizerChoice {
+  final String name;
+  final double confidence;
+
+  FertilizerChoice({required this.name, required this.confidence});
+}
+
 class FertilizerRecommendationResult {
-  final int fertilizerId;
-  final double matchPercentage;
+  final String topFertilizer;
+  final List<FertilizerChoice> topChoices;
+  final double predictedConfidence;
+  final double executionTime;
 
   FertilizerRecommendationResult({
-    required this.fertilizerId,
-    required this.matchPercentage,
+    required this.topFertilizer,
+    required this.topChoices,
+    required this.predictedConfidence,
+    required this.executionTime,
   });
 
+  // Helper method to get fertilizer ID from name
+  int getFertilizerId() {
+    // Map fertilizer names to ID numbers
+    final Map<String, int> fertilizerNameToId = {
+      'Urea': 1,
+      'DAP': 2,
+      'NPK': 3,
+      'Potash': 4,
+      'Ammonium Sulphate': 5,
+      'Water Retaining Fertilizer': 6,
+      'Compost': 7,
+      'Organic Fertilizer': 8,
+      'Balanced Fertilizer': 9,
+      'Micronutrients': 10,
+    };
+
+    return fertilizerNameToId[topFertilizer] ??
+        1; // Default to Urea (1) if not found
+  }
+
+  double getMatchPercentage() {
+    return predictedConfidence * 100;
+  }
+
   factory FertilizerRecommendationResult.fromJson(Map<String, dynamic> json) {
+    final String topFertilizer = json['fertilizer'] as String;
+    final confidenceData = json['confidence'] as Map<String, dynamic>;
+    final List<dynamic> topChoicesJson =
+        confidenceData['top_choices'] as List<dynamic>;
+    final double predictedConfidence =
+        confidenceData['predicted_confidence'] as double;
+    final double executionTime = json['execution_time'] as double;
+
+    final List<FertilizerChoice> topChoices =
+        topChoicesJson.map((choice) {
+          return FertilizerChoice(
+            name: choice['fertilizer'] as String,
+            confidence: choice['confidence'] as double,
+          );
+        }).toList();
+
     return FertilizerRecommendationResult(
-      fertilizerId: json['fertilizer_id'],
-      matchPercentage: json['match_percentage'].toDouble(),
+      topFertilizer: topFertilizer,
+      topChoices: topChoices,
+      predictedConfidence: predictedConfidence,
+      executionTime: executionTime,
     );
   }
 }
 
 class FertilizerService {
-  final String _baseUrl = 'http://localhost:8080/api';
+  final String _baseUrl = 'https://pohora-intelligence.koyeb.app';
+  final String _apiUrl = 'http://16.171.4.110:5000/api';
+  final now = DateTime.now();
 
   // Get fertilizer logs for a cultivation
   Future<List<FertilizerLog>> getFertilizerLogs(int cultivationId) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/fertilizerLogs/$cultivationId'),
+        Uri.parse('$_apiUrl/fertilizerLogs/$cultivationId'),
       );
 
       if (response.statusCode == 200) {
@@ -80,32 +137,44 @@ class FertilizerService {
       }
     } catch (e) {
       print('Error getting fertilizer logs: $e');
-
-      // Mock data for testing
-      return [
-        FertilizerLog(
-          id: 1,
-          timestamp: DateTime.now().subtract(const Duration(days: 30)),
-          cultivationId: cultivationId,
-          fertilizerId: 1,
-          fertilizerName: 'Balanced NPK',
-        ),
-        FertilizerLog(
-          id: 2,
-          timestamp: DateTime.now().subtract(const Duration(days: 15)),
-          cultivationId: cultivationId,
-          fertilizerId: 3,
-          fertilizerName: 'Urea',
-        ),
-        FertilizerLog(
-          id: 3,
-          timestamp: DateTime.now().subtract(const Duration(days: 2)),
-          cultivationId: cultivationId,
-          fertilizerId: 5,
-          fertilizerName: 'Compost',
-        ),
-      ];
+      // Return empty list for testing
+      return getDummyFertilizerLogs(cultivationId);
     }
+  }
+
+  List<FertilizerLog> getDummyFertilizerLogs(int cultivationId) {
+    final now = DateTime.now();
+
+    return [
+      FertilizerLog(
+        id: 1,
+        cultivationId: cultivationId,
+        fertilizerId: 1,
+        fertilizerName: 'Urea',
+        timestamp: now.subtract(const Duration(days: 45)),
+      ),
+      FertilizerLog(
+        id: 2,
+        cultivationId: cultivationId,
+        fertilizerId: 3,
+        fertilizerName: 'NPK',
+        timestamp: now.subtract(const Duration(days: 30)),
+      ),
+      FertilizerLog(
+        id: 3,
+        cultivationId: cultivationId,
+        fertilizerId: 8,
+        fertilizerName: 'Organic Fertilizer',
+        timestamp: now.subtract(const Duration(days: 15)),
+      ),
+      FertilizerLog(
+        id: 4,
+        cultivationId: cultivationId,
+        fertilizerId: 5,
+        fertilizerName: 'Ammonium Sulphate',
+        timestamp: now.subtract(const Duration(days: 7)),
+      ),
+    ];
   }
 
   // Add a new fertilizer log
@@ -115,23 +184,34 @@ class FertilizerService {
     String fertilizerName,
   ) async {
     try {
+      final Map<String, dynamic> logData = {
+        'cultivationId': cultivationId,
+        'fertilizerId': fertilizerId,
+        'fertilizerName': fertilizerName,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+
+      print('Sending fertilizer log data: $logData');
+
       final response = await http.post(
-        Uri.parse('$_baseUrl/fertilizerLogs'),
+        Uri.parse('$_apiUrl/fertilizerLogs'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'cultivationId': cultivationId,
-          'fertilizerId': fertilizerId,
-          'fertilizerName': fertilizerName,
-          'timestamp': DateTime.now().toIso8601String(),
-        }),
+        body: jsonEncode(logData),
       );
 
-      return response.statusCode == 200 || response.statusCode == 201;
+      print('Fertilizer log response status: ${response.statusCode}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('Successfully added fertilizer log');
+        return true;
+      } else {
+        print('Failed to add fertilizer log: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        return false;
+      }
     } catch (e) {
       print('Error adding fertilizer log: $e');
-
-      // Mock success for testing
-      return true;
+      return false;
     }
   }
 
@@ -140,54 +220,41 @@ class FertilizerService {
     FertilizerRecommendationParams params,
   ) async {
     try {
+      print(
+        'Sending fertilizer recommendation request: ${jsonEncode(params.toJson())}',
+      );
+
       final response = await http.post(
-        Uri.parse('$_baseUrl/fertilizer-recommendation'),
+        Uri.parse('$_baseUrl/recommendation/fertilizer'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(params.toJson()),
       );
 
+      print(
+        'Fertilizer recommendation response status: ${response.statusCode}',
+      );
+
       if (response.statusCode == 200) {
-        return FertilizerRecommendationResult.fromJson(
-          jsonDecode(response.body),
-        );
+        final jsonResponse = jsonDecode(response.body);
+        print('Fertilizer recommendation response: $jsonResponse');
+        return FertilizerRecommendationResult.fromJson(jsonResponse);
       } else {
+        print('Error response body: ${response.body}');
         throw Exception('Failed to get recommendation: ${response.statusCode}');
       }
     } catch (e) {
       print('Error getting fertilizer recommendation: $e');
 
-      // Mock result for testing
-      // Return a different fertilizer based on the crop ID
-      int recommendedFertilizerId;
-      switch (params.cropId % 10) {
-        case 0:
-        case 1:
-          recommendedFertilizerId = 1; // Balanced NPK
-          break;
-        case 2:
-        case 3:
-          recommendedFertilizerId = 2; // DAP
-          break;
-        case 4:
-        case 5:
-          recommendedFertilizerId = 3; // Urea
-          break;
-        case 6:
-        case 7:
-          recommendedFertilizerId = 4; // MOP
-          break;
-        case 8:
-        case 9:
-          recommendedFertilizerId = 5; // Compost
-          break;
-        default:
-          recommendedFertilizerId = 1;
-      }
-
+      // Mock result for testing when API is unavailable
       return FertilizerRecommendationResult(
-        fertilizerId: recommendedFertilizerId,
-        matchPercentage:
-            0.85 + (params.cropId % 15) / 100, // Vary between 85% and 99%
+        topFertilizer: 'Urea',
+        topChoices: [
+          FertilizerChoice(name: 'Urea', confidence: 0.75),
+          FertilizerChoice(name: 'DAP', confidence: 0.15),
+          FertilizerChoice(name: 'Compost', confidence: 0.10),
+        ],
+        predictedConfidence: 0.75,
+        executionTime: 0.003,
       );
     }
   }

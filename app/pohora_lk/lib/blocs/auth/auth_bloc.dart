@@ -4,14 +4,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pohora_lk/blocs/auth/auth_event.dart';
 import 'package:pohora_lk/blocs/auth/auth_state.dart';
 import 'package:pohora_lk/data/repositories/auth_repository.dart';
+import 'package:pohora_lk/data/repositories/chat_repository.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
+  final ChatRepository _chatRepository;
   late final StreamSubscription<User?> _authStateSubscription;
 
-  AuthBloc({required AuthRepository authRepository})
-    : _authRepository = authRepository,
-      super(const AuthState.unknown()) {
+  AuthBloc({
+    required AuthRepository authRepository,
+    required ChatRepository chatRepository,
+  }) : _authRepository = authRepository,
+       _chatRepository = chatRepository,
+       super(const AuthState.unknown()) {
     on<AuthInitialized>(_onAuthInitialized);
     on<EmailSignInRequested>(_onEmailSignInRequested);
     on<GoogleSignInRequested>(_onGoogleSignInRequested);
@@ -86,6 +91,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     await _authRepository.signOut();
+    // Force the chat repository to refresh for the new (anonymous) user
+    _chatRepository.getMessageHistory();
   }
 
   Future<void> _onResetPasswordRequested(

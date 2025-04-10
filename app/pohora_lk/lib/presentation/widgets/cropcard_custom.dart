@@ -8,71 +8,10 @@ class CropCard_Custom extends StatelessWidget {
 
   const CropCard_Custom({super.key, required this.cultivation});
 
-  // Helper method to get crop image path based on cropId
-  String getCropImagePath(int cropId) {
-    // Map cropId to the correct image
-    final Map<int, String> cropImages = {
-      1: 'assets/crops/rice.jpg',
-      2: 'assets/crops/maize.jpg',
-      3: 'assets/crops/chickpea.jpg',
-      4: 'assets/crops/kidneybeans.jpg',
-      5: 'assets/crops/pigeonbeans.jpg',
-      6: 'assets/crops/mothbeans.jpg',
-      7: 'assets/crops/mungbeans.jpg',
-      8: 'assets/crops/blackgram.jpg',
-      9: 'assets/crops/lentil.jpg',
-      10: 'assets/crops/pomegranate.jpg',
-      11: 'assets/crops/banana.jpeg',
-      12: 'assets/crops/mango.jpg',
-      13: 'assets/crops/grapes.jpg',
-      14: 'assets/crops/watermelon.jpg',
-      15: 'assets/crops/muskmelon.jpg',
-      16: 'assets/crops/apple.jpeg',
-      17: 'assets/crops/orange.jpeg',
-      18: 'assets/crops/papaya.jpg',
-      19: 'assets/crops/coconut.jpeg',
-      21: 'assets/crops/jute.jpg',
-      22: 'assets/crops/coffee.jpg',
-    };
-
-    return cropImages[cropId] ?? 'assets/crops/default_crop.png';
-  }
-
-  // Helper method to get crop name based on cropId
-  String getCropName(int cropId) {
-    final Map<int, String> cropNames = {
-      1: 'Rice',
-      2: 'Maize',
-      3: 'Chickpea',
-      4: 'Kidney Beans',
-      5: 'Pigeon Beans',
-      6: 'Moth Beans',
-      7: 'Mung Beans',
-      8: 'Black Gram',
-      9: 'Lentil',
-      10: 'Pomegranate',
-      11: 'Banana',
-      12: 'Mango',
-      13: 'Grapes',
-      14: 'Watermelon',
-      15: 'Muskmelon',
-      16: 'Apple',
-      17: 'Orange',
-      18: 'Papaya',
-      19: 'Coconut',
-      20: 'Cotton',
-      21: 'Jute',
-      22: 'Coffee',
-    };
-
-    return cropNames[cropId] ?? 'Unknown Crop';
-  }
-
   @override
   Widget build(BuildContext context) {
-    final cropName = cultivation.cropName ?? getCropName(cultivation.cropId);
-    final cropImagePath =
-        cultivation.cropImagePath ?? getCropImagePath(cultivation.cropId);
+    final cropName = cultivation.displayName;
+    final cropImagePath = cultivation.displayImagePath;
 
     return Card(
       elevation: 2,
@@ -147,7 +86,7 @@ class CropCard_Custom extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${cultivation.landArea} acres • ${cultivation.soilType} soil',
+                      '${cultivation.landArea} acres • ${cultivation.soilType}',
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 13,

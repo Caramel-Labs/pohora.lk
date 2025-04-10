@@ -3,7 +3,6 @@ import 'package:pohora_lk/data/models/cultivation.dart';
 import 'package:pohora_lk/data/repositories/cultivation_repository.dart';
 import 'package:pohora_lk/presentation/widgets/cropcard_custom.dart';
 import 'package:pohora_lk/presentation/screens/home/add_cultivation_screen.dart';
-import 'package:pohora_lk/routes.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -62,8 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
             _cultivations.where((cultivation) {
               return cultivation.cropName?.toLowerCase().contains(query) ==
                       true ||
-                  cultivation.location.toLowerCase().contains(query) ||
-                  cultivation.soilType.toLowerCase().contains(query);
+                  cultivation.location.toLowerCase().contains(query) == true ||
+                  cultivation.soilType.toLowerCase().contains(query) == true;
             }).toList();
       }
     });

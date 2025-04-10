@@ -20,7 +20,11 @@ void main() async {
         RepositoryProvider.value(value: chatRepository),
       ],
       child: BlocProvider(
-        create: (context) => AuthBloc(authRepository: authRepository),
+        create:
+            (context) => AuthBloc(
+              authRepository: authRepository,
+              chatRepository: chatRepository,
+            ),
         child: const MyApp(),
       ),
     ),

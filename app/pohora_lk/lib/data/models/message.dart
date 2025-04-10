@@ -11,19 +11,24 @@ class Message {
     required this.timestamp,
   });
 
+  // Factory constructor to create a Message from JSON
   factory Message.fromJson(Map<String, dynamic> json) {
     return Message(
-      isBot: json['isBot'] as bool,
-      userId: json['userId'] as String,
-      content: json['content'] as String,
-      timestamp: DateTime.parse(json['timestamp'] as String),
+      isBot: json['is_bot'] ?? false,
+      userId: json['user_id'] ?? 'anonymous',
+      content: json['content'] ?? '',
+      timestamp:
+          json['timestamp'] != null
+              ? DateTime.parse(json['timestamp'])
+              : DateTime.now(),
     );
   }
 
+  // Convert Message to JSON
   Map<String, dynamic> toJson() {
     return {
-      'isBot': isBot,
-      'userId': userId,
+      'is_bot': isBot,
+      'user_id': userId,
       'content': content,
       'timestamp': timestamp.toIso8601String(),
     };

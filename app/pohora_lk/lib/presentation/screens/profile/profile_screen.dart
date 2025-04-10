@@ -79,24 +79,6 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const Divider(),
                   ListTile(
-                    leading: const Icon(Icons.history),
-                    title: const Text('History'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Navigate to history
-                    },
-                  ),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.favorite),
-                    title: const Text('Saved Crops'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Navigate to saved crops
-                    },
-                  ),
-                  const Divider(),
-                  ListTile(
                     leading: const Icon(Icons.help_outline),
                     title: const Text('Help & Support'),
                     trailing: const Icon(Icons.chevron_right),

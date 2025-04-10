@@ -11,6 +11,7 @@ class AddCultivationScreen extends StatefulWidget {
 
 class _AddCultivationScreenState extends State<AddCultivationScreen> {
   final _landAreaController = TextEditingController();
+  final _locationController = TextEditingController(); // Default location
   String _selectedUnit = 'Acres';
   final List<String> _units = ['Acres', 'Hectares'];
 
@@ -58,6 +59,7 @@ class _AddCultivationScreenState extends State<AddCultivationScreen> {
   @override
   void dispose() {
     _landAreaController.dispose();
+    _locationController.dispose();
     super.dispose();
   }
 
@@ -75,6 +77,35 @@ class _AddCultivationScreenState extends State<AddCultivationScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
+
+            // Location input field
+            const Text(
+              'Location',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _locationController,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                hintText: 'Enter location name',
+                prefixIcon: const Icon(Icons.location_on),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.my_location, size: 20),
+                  tooltip: 'Use current location',
+                  onPressed: () {
+                    // In a real app, you'd use a location plugin here
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Getting current location...'),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
 
             // Land area input with unit selection
             const Text(
@@ -153,7 +184,7 @@ class _AddCultivationScreenState extends State<AddCultivationScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.swap_horiz, size: 16),
+                    const Icon(Icons.swap_horiz, size: 16),
                     const SizedBox(width: 8),
                     Text(
                       'Equivalent to: ${_getConvertedUnitText()}',
@@ -204,7 +235,7 @@ class _AddCultivationScreenState extends State<AddCultivationScreen> {
             // Soil description card
             const SizedBox(height: 16),
             Card(
-              margin: EdgeInsets.all(0.0),
+              margin: const EdgeInsets.all(0.0),
               elevation: 0,
               color: Theme.of(context).highlightColor,
               shape: RoundedRectangleBorder(
@@ -250,33 +281,39 @@ class _AddCultivationScreenState extends State<AddCultivationScreen> {
               child: PrimaryButtonCustom(
                 onPressed: () {
                   // Navigate to next page
-                  if (_landAreaController.text.isNotEmpty) {
-                    // Navigator.push to next screen with cultivation data
-                    print(
-                      'Continue with: ${_landAreaController.text} $_selectedUnit, $_selectedSoil',
-                    );
-                    // Parse the land area
-                    double landArea =
-                        double.tryParse(_landAreaController.text) ?? 0;
-
-                    // Navigate to the select crop screen
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => SelectCropScreen(
-                              landArea: landArea,
-                              unit: _selectedUnit,
-                              soilType: _selectedSoil,
-                            ),
-                      ),
-                    );
-                  } else {
-                    // Show validation error
+                  if (_landAreaController.text.isEmpty) {
+                    // Show validation error for land area
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Please enter land area')),
                     );
+                    return;
                   }
+
+                  if (_locationController.text.isEmpty) {
+                    // Show validation error for location
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter location')),
+                    );
+                    return;
+                  }
+
+                  // Parse the land area
+                  double landArea =
+                      double.tryParse(_landAreaController.text) ?? 0;
+
+                  // Navigate to the select crop screen with all data
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => SelectCropScreen(
+                            landArea: landArea,
+                            unit: _selectedUnit,
+                            soilType: _selectedSoil,
+                            location: _locationController.text,
+                          ),
+                    ),
+                  );
                 },
                 label: 'Continue',
               ),
