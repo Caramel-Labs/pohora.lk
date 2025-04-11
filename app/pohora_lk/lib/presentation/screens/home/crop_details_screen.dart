@@ -24,12 +24,14 @@ class CropDetailsScreen extends StatefulWidget {
 class _CropDetailsScreenState extends State<CropDetailsScreen> {
   List<FertilizerLog> _fertilizerLogs = [];
   bool _isLoadingLogs = true;
-  Cultivation? _cultivationData;
+  late Cultivation? _cultivationData;
   bool _isLoadingCultivation = true;
 
   @override
   void initState() {
     super.initState();
+    print('Received cultivationId: ${widget.cultivationId}');
+    print('Received cropId: ${widget.cropId}');
     _loadFertilizerLogs();
     _loadCultivationData();
   }
@@ -92,6 +94,8 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
         _cultivationData = cultivation;
         _isLoadingCultivation = false;
       });
+
+      print('cultivation id after loading: ${cultivation.cultivationId}');
     } catch (e) {
       print('Error loading cultivation data: $e');
       setState(() {
@@ -1167,8 +1171,10 @@ class _CropDetailsScreenState extends State<CropDetailsScreen> {
   ) async {
     final service = FertilizerService();
 
+    print('Cultivation id: ${_cultivationData!.cultivationId}');
+
     bool isFertilizerAdded = await service.addFertilizerLog(
-      widget.cultivationId,
+      _cultivationData!.cultivationId,
       fertilizerId,
       fertilizerName,
     );

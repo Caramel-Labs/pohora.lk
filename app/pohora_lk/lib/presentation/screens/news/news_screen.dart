@@ -48,7 +48,7 @@ class _NewsScreenState extends State<NewsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Agricultural News'), elevation: 1),
+      appBar: AppBar(title: const Text('Agricultural News')),
       body: RefreshIndicator(
         onRefresh: _loadNews,
         child:

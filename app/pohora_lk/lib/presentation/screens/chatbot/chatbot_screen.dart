@@ -109,8 +109,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('AgriAssistant'), elevation: 1),
-      // Use a regular Column for the chat content
+      appBar: AppBar(title: const Text('AgriAssistant')),
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -173,6 +172,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                                 color: Colors.grey.shade700,
                               ),
                             ),
+                            const SizedBox(width: 8),
                           ],
                         ),
                       ),
@@ -255,7 +255,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   MainAxisSize.min, // Only take as much space as needed
               children: [
                 Icon(
-                  Icons.smart_toy_rounded,
+                  Icons.smart_toy_outlined,
                   size: 48,
                   color: Theme.of(context).colorScheme.primary,
                 ),

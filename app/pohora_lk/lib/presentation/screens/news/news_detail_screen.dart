@@ -316,7 +316,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
           // User avatar
           CircleAvatar(
             radius: 18,
-            backgroundColor: Colors.grey.shade200,
+            backgroundColor: Theme.of(context).highlightColor,
             child: Text(
               comment.userName?.substring(0, 1).toUpperCase() ??
                   comment.userId.substring(0, 1).toUpperCase(),
@@ -368,7 +368,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -401,7 +401,7 @@ class _NewsDetailScreenState extends State<NewsDetailScreen> {
             child:
                 _isPostingComment
                     ? const CircularProgressIndicator()
-                    : IconButton(
+                    : IconButton.filledTonal(
                       icon: const Icon(Icons.send),
                       color: Theme.of(context).colorScheme.primary,
                       onPressed: _postComment,

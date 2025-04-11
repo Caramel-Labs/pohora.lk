@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:pohora_lk/data/models/cultivation.dart';
 import 'package:pohora_lk/presentation/screens/home/crop_details_screen.dart';
-import 'package:pohora_lk/routes.dart';
 
 class CropCard_Custom extends StatelessWidget {
-  final Cultivation cultivation;
+  late Cultivation cultivation;
 
-  const CropCard_Custom({super.key, required this.cultivation});
+  CropCard_Custom({super.key, required this.cultivation});
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +19,9 @@ class CropCard_Custom extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
+          print(
+            'Navigating to details with cultivationId: ${cultivation.cultivationId}',
+          );
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -86,7 +88,7 @@ class CropCard_Custom extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${cultivation.landArea} acres • ${cultivation.soilType}',
+                      '${cultivation.landArea} Acres • ${cultivation.soilType}',
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 13,

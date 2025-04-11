@@ -117,7 +117,7 @@ class FertilizerRecommendationResult {
 
 class FertilizerService {
   final String _baseUrl = 'https://pohora-intelligence.koyeb.app';
-  final String _apiUrl = 'http://16.171.4.110:5000/api';
+  final String _apiUrl = 'http://13.53.91.220:5000/api';
   final now = DateTime.now();
 
   // Get fertilizer logs for a cultivation
@@ -184,29 +184,40 @@ class FertilizerService {
     String fertilizerName,
   ) async {
     try {
+      final formattedTimestamp =
+          '${DateTime.now().toUtc().toIso8601String().split('.').first}Z';
+
       final Map<String, dynamic> logData = {
-        'cultivationId': cultivationId,
-        'fertilizerId': fertilizerId,
-        'fertilizerName': fertilizerName,
-        'timestamp': DateTime.now().toIso8601String(),
+        "timestamp": formattedTimestamp,
+        "cultivationId": cultivationId,
+        "fertilizerId": fertilizerId,
+        "fertilizerName": fertilizerName,
       };
 
       print('Sending fertilizer log data: $logData');
 
       final response = await http.post(
-        Uri.parse('$_apiUrl/fertilizerLogs'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('http://13.53.91.220:5000/api/fertilizerLogs'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: jsonEncode(logData),
       );
 
+      if (cultivationId <= 0) {
+        print('Error: Invalid cultivation ID: $cultivationId');
+        return false;
+      }
+
       print('Fertilizer log response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('Successfully added fertilizer log');
         return true;
       } else {
         print('Failed to add fertilizer log: ${response.statusCode}');
-        print('Response body: ${response.body}');
         return false;
       }
     } catch (e) {

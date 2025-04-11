@@ -92,7 +92,9 @@ class CultivationRepository {
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         // Parse the response to get the ID of the new cultivation
-        return cultivation.cropId;
+        final responseBody = json.decode(response.body);
+        print('Cultivation response body: $responseBody');
+        return cultivation.cultivationId;
       } else {
         print(
           'Failed to add cultivation: ${response.statusCode}, ${response.body}',

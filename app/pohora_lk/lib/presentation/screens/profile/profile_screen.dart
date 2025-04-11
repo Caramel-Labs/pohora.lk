@@ -3,6 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pohora_lk/blocs/auth/auth_bloc.dart';
 import 'package:pohora_lk/blocs/auth/auth_event.dart';
 import 'package:pohora_lk/blocs/auth/auth_state.dart';
+import 'package:pohora_lk/blocs/theme/theme_cubit.dart';
+import 'package:pohora_lk/presentation/screens/profile/about_screen.dart';
+import 'package:pohora_lk/presentation/screens/profile/account_settings_screen.dart';
+import 'package:pohora_lk/presentation/screens/profile/help_support_screen.dart';
 import 'package:pohora_lk/routes.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -10,6 +14,9 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeCubit = context.watch<ThemeCubit>();
+    final isDarkMode = themeCubit.isDarkMode;
+
     return BlocListener<AuthBloc, AuthState>(
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
@@ -20,15 +27,7 @@ class ProfileScreen extends StatelessWidget {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Profile'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: () => _showSignOutDialog(context),
-            ),
-          ],
-        ),
+        appBar: AppBar(title: const Text('Profile')),
         body: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             final user = state.user;
@@ -44,15 +43,14 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  const SizedBox(height: 20),
                   CircleAvatar(
                     radius: 60,
-                    backgroundColor: Colors.grey.shade200,
+                    backgroundColor: Theme.of(context).highlightColor,
                     backgroundImage:
                         photoUrl != null ? NetworkImage(photoUrl) : null,
                     child:
                         photoUrl == null
-                            ? const Icon(Icons.person, size: 60)
+                            ? const Icon(Icons.person_outline_rounded, size: 60)
                             : null,
                   ),
                   const SizedBox(height: 24),
@@ -68,13 +66,66 @@ class ProfileScreen extends StatelessWidget {
                     email,
                     style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                   ),
-                  const SizedBox(height: 32),
+
+                  // Theme switch with card
+                  const SizedBox(height: 24),
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Dark Mode',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                isDarkMode
+                                    ? 'Switch to light theme'
+                                    : 'Switch to dark theme',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Switch(
+                            value: isDarkMode,
+                            onChanged: (_) async {
+                              await themeCubit.toggleTheme();
+                            },
+                            activeColor: Theme.of(context).colorScheme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Menu items
                   ListTile(
-                    leading: const Icon(Icons.settings),
+                    leading: const Icon(Icons.settings_outlined),
                     title: const Text('Account Settings'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // Navigate to account settings
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AccountSettingsScreen(),
+                        ),
+                      );
                     },
                   ),
                   const Divider(),
@@ -83,7 +134,12 @@ class ProfileScreen extends StatelessWidget {
                     title: const Text('Help & Support'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // Navigate to help & support
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HelpSupportScreen(),
+                        ),
+                      );
                     },
                   ),
                   const Divider(),
@@ -92,21 +148,32 @@ class ProfileScreen extends StatelessWidget {
                     title: const Text('About'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      // Navigate to about page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AboutScreen(),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: 24),
-                  OutlinedButton(
-                    onPressed: () => _showSignOutDialog(context),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 12,
+                  SizedBox(
+                    width: double.maxFinite,
+                    child: OutlinedButton(
+                      onPressed: () => _showSignOutDialog(context),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: const BorderSide(color: Colors.red),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
+                      child: const Text('Sign Out'),
                     ),
-                    child: const Text('Sign Out'),
                   ),
                 ],
               ),

@@ -29,7 +29,7 @@ class Cultivation {
     final cropData = CropData.getById(id);
 
     return Cultivation(
-      cultivationId: json['cultivationId'] ?? 0,
+      cultivationId: json['id'] ?? 0,
       soilType: json['soilType'] ?? '',
       landArea: (json['landArea'] ?? 0).toDouble(),
       unit: json['unit'],
@@ -52,6 +52,30 @@ class Cultivation {
       'cropId': cropId,
       'userId': userId,
     };
+  }
+
+  Cultivation copyWith({
+    int? cultivationId,
+    String? soilType,
+    double? landArea,
+    String? unit,
+    String? location,
+    int? cropId,
+    String? userId,
+    String? cropName,
+    String? cropImagePath,
+  }) {
+    return Cultivation(
+      cultivationId: cultivationId ?? this.cultivationId,
+      soilType: soilType ?? this.soilType,
+      landArea: landArea ?? this.landArea,
+      unit: unit ?? this.unit,
+      location: location ?? this.location,
+      cropId: cropId ?? this.cropId,
+      userId: userId ?? this.userId,
+      cropName: cropName ?? this.cropName,
+      cropImagePath: cropImagePath ?? this.cropImagePath,
+    );
   }
 
   // Helper method to ensure crop name is available
