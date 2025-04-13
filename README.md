@@ -19,7 +19,7 @@ A comprehensive Machine Learning-powered agriculture assistant that recommends o
 
 ## 🏗️ Architecture
 
-<p align="center"> <img src="assets/architecture.png" alt="Pohora.lk Architecture" height="500"/> </p>
+<p align="center"> <img src="assets/architecture.png" alt="Pohora.lk Architecture" width="100%"/> </p>
 
 ## 🛠️ Tech Stack
 
@@ -148,38 +148,26 @@ Models are trained on agricultural data including soil parameters (N, P, K level
  - **Profile Settings:** User preferences and account management
 
 ## 🖼️ Screenshots
-<table>
-<tr>
-<th>Sign In</th>
-<th>Home</th>
-<th>Crop Recommendation</th>
-</tr>
-<tr>
-<td><img src="assets/sign-in.png" width=270 alt="Sign In Screen"></td>  
-<td><img src="assets/home.png" width=270 alt="Home Screen"></td>
-<td><img src="assets/crop-recommend.png" width=270 alt="Crop Recommendation Screen"></td>
-</tr>
-<tr>
-<th>Crop Details</th>
-<th>Fertilizer Recommendation</th>
-<th>Chat bot</th>
-</tr>
-<tr>
-<td><img src="assets/crop-details.png" width=270 alt="Crop Details Screen"></td>  
-<td><img src="assets/fertilizer-recommed.png" width=270 alt="Fertilizer Recommendation Screen"></td>
-<td><img src="assets/chatbot.png" width=270 alt="Chatbot Screen"></td>
-</tr>
-<tr>
-<th>News</th>
-<th>Profile</th>
-<th>Dark Mode</th>
-</tr>
-<tr>
-<td><img src="assets/news.png" width=270 alt="Agri News Screen"></td>  
-<td><img src="assets/profille.png" width=270 alt="User Profile Screen"></td>
-<td><img src="assets/dark-mode.png" width=270 alt="Dark Mode"></td>
-</tr>
-</table>
+### Authentication, Home & Crop Details
+<p align="center">
+  <img src="assets/sign-in.png" width="32%" alt="Sign In Screen">
+  <img src="assets/home.png" width="32%" alt="Home Screen">
+  <img src="assets/crop-details.png" width="32%" alt="Crop Details Screen">
+</p>
+
+### Recommendations & Chat bot
+<p align="center">
+  <img src="assets/crop-recommend.png" width="32%" alt="Crop Recommendation Screen">
+  <img src="assets/fertilizer-recommed.png" width="32%" alt="Fertilizer Recommendation Screen">
+  <img src="assets/chatbot.png" width="32%" alt="Chatbot Screen">
+</p>
+
+### News, Profile & Dark Mode
+<p align="center">
+  <img src="assets/news.png" width="32%" alt="Agri News Screen">
+  <img src="assets/profille.png" width="32%" alt="User Profile Screen">
+  <img src="assets/dark-mode.png" width="32%" alt="Dark Mode">
+</p>
 
 ## 📄 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
